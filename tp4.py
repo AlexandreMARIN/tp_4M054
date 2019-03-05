@@ -261,3 +261,54 @@ ax.plot_surface(gridX, gridY, U_exact, linewidth=0.2, antialiased=True)
 ax.set_title("solution exacte")
 
 plt.show()
+
+
+#####étude de l'erreur
+def error(u, u_h, K):
+    """
+    u : interpolation de la solution du problème continu
+    u_h : coordonnées dans la base des fonctions de forme de la solution au problème discret
+    K : matrice de rigidité
+
+    renvoie la semi-norme H^1 de l'erreur u-u_h
+    """
+    return np.sqrt(abs((((u-u_h).reshape((1, u.shape[0]))).dot(K)).dot(u-u_h)))
+
+
+U = U.reshape((U.shape[0], 1))
+U_interp = np.zeros( U.shape )
+for i in range(U_interp.shape[0]):
+    U_interp[i, 0] = u(X[i], Y[i])
+print("semi-norme de l'erreur :")
+print(error(U_interp, U, K))
+
+
+
+h_ = np.array([0.1, 0.05, 0.025, 0.0125])
+measures = np.zeros(h_.shape)
+
+for k in range(h_.shape[0]):
+    n = int(1+(np.sqrt(2/h_[k])))
+    create_rect_mesh("rect"+str(n)+".msh", n, n, 1, 1)
+    nodes = read_nodes_file("rect"+str(n)+".msh")#alias (s_i)_i
+    elements = read_elements_file("rect"+str(n)+".msh")#alias I
+    M = build_M(nodes, elements)
+    K = build_K(nodes, elements)
+    F = build_F(M, nodes, f)
+    U = np.linalg.solve(M+K, F)
+    U = U.reshape((U.shape[0], 1))
+    X = nodes[:, 0]
+    Y = nodes[:, 1]
+    U_interp = np.empty( U.shape )
+    for i in range(U_interp.shape[0]):
+        U_interp[i, 0] = u(X[i], Y[i])
+    measures[k] = error(U_interp, U, K)
+
+
+plt.figure(4)
+print(measures)
+plt.plot(h_, measures, "r--", h_, h_**0.5, "g-")
+plt.draw()
+plt.xscale('log')
+plt.yscale('log')
+plt.show()
