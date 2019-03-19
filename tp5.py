@@ -122,7 +122,7 @@ def MassElem(s1, s2, s3):
     Matrice de masse pour un triangle
     exo4 q2
     """
-    M_T = np.array([[1.0/6, 1.0/24, 1.0/24], [1.0/24, 1.0/6, 1.0/24], [1.0/24, 1.0/24, 1.0/6]])
+    M_T = np.array([[1.0/6, 1.0/12, 1.0/12], [1.0/12, 1.0/6, 1.0/12], [1.0/12, 1.0/12, 1.0/6]])
     area = 0.5*abs( (s1[0]-s2[0])*(s2[1]-s3[1]) - (s1[1]-s2[1])*(s2[0]-s3[0]) )
 
     M_T *= area
@@ -183,7 +183,7 @@ def build_F(M, nodes, f):
     return M.dot(vec)
 
 
-def error(u, u_h, K):
+def error_H1(u, u_h, K):
     """
     u : interpolation de la solution du problème continu
     u_h : coordonnées dans la base des fonctions de forme de la solution au problème discret
@@ -192,6 +192,16 @@ def error(u, u_h, K):
     renvoie la semi-norme H^1 de l'erreur u-u_h
     """
     return np.sqrt((((u-u_h).reshape((1, u.shape[0]))).dot(K)).dot(u-u_h))
+
+def error_L2(u, u_h, M):
+    """
+    u : interpolation de la solution du problème continu
+    u_h : coordonnées dans la base des fonctions de forme de la solution au problème discret
+    M : matrice de masse
+
+    renvoie la norme L2 de l'erreur u-u_h
+    """
+    return np.sqrt((((u-u_h).reshape((1, u.shape[0]))).dot(M)).dot(u-u_h))
 
 def pseudo_elimination(A, nodes0):
     """
@@ -219,7 +229,7 @@ def exact_penalty(A, nodes0):
         A[i, i] *= tgv
     return A
 
-#tests
+###tests
 
 #demander à l'utilisateur le nombre de points en horizontal/vertical
 hnb = int(input("Give an integer : "))
@@ -382,8 +392,9 @@ plt.show()
 
 
 #étude de l'erreur
-h_ = np.array([0.001, 0.25, 0.125])
-measures = np.zeros(h_.shape)
+h_ = np.array([0.4, 0.2, 0.1, 0.05, 0.025, 0.0125])
+errH1 = np.zeros(h_.shape)
+errL2 = np.zeros(h_.shape)
 
 for k in range(h_.shape[0]):
     n = int(1+(1/h_[k]))
@@ -408,15 +419,21 @@ for k in range(h_.shape[0]):
     U_interp = np.empty( U.shape )
     for i in range(U_interp.shape[0]):
         U_interp[i, 0] = u(X[i], Y[i])
-    measures[k] = error(U_interp, U, K)
+    errH1[k] = error_H1(U_interp, U, K)
+    errL2[k] = error_L2(U_interp, U, M)
 
 
 plt.figure(4)
-print("mesures : ")
-print(measures)
-plt.plot(h_, measures, "r--", h_, h_, "g-")
-plt.legend(["$|u-u_{h}|_{H^{1}(\Omega)}$", "$h$"])
+print("mesures : \nH1 :")
+print(errH1)
+print("L2 :")
+print(errL2)
+plt.plot(h_, errH1, "b.-.", h_, errL2, "r--", h_, h_**2, "g-")
+plt.legend([r"$|u-u_{h}|_{H^{1}(\Omega)}$", r"$||u-u_{h}||_{L^{2}(\Omega)}$", 
+"$h^2$"])
 plt.draw()
+plt.xlabel("$h$")
 plt.xscale('log')
 plt.yscale('log')
+plt.title("Evolution de l'erreur en fonction de $h$")
 plt.show()

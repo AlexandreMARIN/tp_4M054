@@ -144,11 +144,11 @@ def draw_func_on_mesh(coords, triangles, col):
 #tests
 
 
-read_lines("maillage-tp1.msh")
+#read_lines("maillage-tp1.msh")
 
-print(read_nodes_file("maillage-tp1.msh"))
+#print(read_nodes_file("maillage-tp1.msh"))
 
-print(read_elements_file("maillage-tp1.msh"))
+#print(read_elements_file("maillage-tp1.msh"))
 
 
 #création d'un maillage sur un rectangle puis affichage de celui-ci
